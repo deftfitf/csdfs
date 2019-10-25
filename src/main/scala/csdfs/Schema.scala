@@ -1,3 +1,0 @@
-package csdfs
-
-trait Schema

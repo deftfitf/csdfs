@@ -5,18 +5,20 @@ import org.specs2.mutable.Specification
 
 class MySQLSchemaParserSpec extends Specification {
 
+  val parser = new MySQLSchemaParser {}
+
   "#parseAll" should {
 
     "return MySQLSchema" in {
       val expected =
         MySQLSchema(
-          "table",
+          Table("table"),
           List(
-            ColumnDef("id",DataType.Int,true,true,false),
-            ColumnDef("column1",DataType.Mediumint,true,false,false),
-            ColumnDef("column2",DataType.MEnum(Set("value1", "value2"), None),false,false,true),
-            ForeignKey("foreign_table",Map("column2" -> "fr_column"))))
-      val parsed = MySQLSchemaParser.parse(
+            ColumnDef(Column("id"),MySQLDataType.Int,true,true,false),
+            ColumnDef(Column("column1"),MySQLDataType.Mediumint,true,false,false),
+            ColumnDef(Column("column2"),MySQLDataType.MEnum(Set("value1", "value2"), None),false,false,true),
+            ForeignKey(Table("foreign_table"),Map(Column("column2") -> Column("fr_column")))))
+      val parsed = parser.parsing(
         """
           |create table table (
           |  id int not null auto_increment,

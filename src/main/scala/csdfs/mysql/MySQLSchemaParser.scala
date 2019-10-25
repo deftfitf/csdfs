@@ -2,26 +2,26 @@ package csdfs.mysql
 
 import java.nio.charset.Charset
 
-import csdfs.SchemaParser
+import csdfs.mysql.CsdfsError.SchemaParseError
 import csdfs.mysql.MySQLSchema._
-import csdfs.mysql.{DataType => dt}
+import csdfs.mysql.{MySQLDataType => dt}
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
-protected[csdfs] object MySQLSchemaParser
-    extends JavaTokenParsers
-    with SchemaParser[MySQLSchema] {
+protected[csdfs] trait MySQLSchemaParser
+    extends JavaTokenParsers {
 
-  def parse(schema: String): Either[Throwable, MySQLSchema] =
+  def parsing(schema: String): Either[CsdfsError, MySQLSchema] =
     parseAll(expr, schema) match {
       case Success(s, _) => Right(s)
-      case Failure(e, _) => Left(new Throwable(e))
+      case Failure(e, _) => Left(SchemaParseError(e))
+      case Error(e, _) => Left(SchemaParseError(e))
     }
 
   private def expr: Parser[MySQLSchema] =
     "CREATE" ~> "TEMPORARY".? ~> "TABLE" ~> ("IF" ~> "NOT" ~> "EXISTS").? ~> stringLiteral ~
       ("(" ~> rep1sep(createDefinition, ",") <~ ")") ^^ { case tblName ~ createDefinitions =>
-        MySQLSchema(tblName, createDefinitions)
+        MySQLSchema(Table(tblName), createDefinitions)
     }
 
   private def createDefinition: Parser[CreateDefinition] =
@@ -31,14 +31,14 @@ protected[csdfs] object MySQLSchemaParser
     stringLiteral ~ dataType ~ notNullConstraint ~ autoIncrement ~ uniqueConstraint ^^
       { case columnName ~ dataType ~ notNullConstraint ~ autoIncrement ~ uniqueConstraint =>
         ColumnDef(
-          columnName = columnName,
+          column = Column(columnName),
           dataType = dataType,
           notNull = notNullConstraint,
           autoIncrement = autoIncrement,
           unique = uniqueConstraint)
     }
 
-  private def dataType: Parser[DataType] =
+  private def dataType: Parser[MySQLDataType] =
     bit | tinyint | smallint | mediumint | int | integer |
       bigint | double | float | decimal | numeric | date |
       time | timestamp | datetime | year | char | varchar | binary |
@@ -117,12 +117,13 @@ protected[csdfs] object MySQLSchemaParser
         ("(" ~> rep1sep(stringLiteral, ",") <~ ")") <~
       (("ON" ~> "DELETE" ~> stringLiteral).? ~ ("ON" ~> "UPDATE" ~> stringLiteral).?)) ^^ {
       case thisTblKeys ~ (refTblName ~ refTblKeys) =>
-        ForeignKey(refTblName, thisTblKeys.zip(refTblKeys).toMap)
+        ForeignKey(
+          Table(refTblName),
+          thisTblKeys.map(Column)
+            .zip(refTblKeys.map(Column)).toMap)
     }
 
   private val ifSomeTrueElseFalse: Option[_] => Boolean = _.fold(false)(_ => true)
-
-  private def comma = ","
 
   override val whiteSpace = """\s+|\r|\n|\r\n""".r
 
