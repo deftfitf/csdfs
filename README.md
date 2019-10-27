@@ -19,8 +19,8 @@ csdfs.generateInsertStatements(
       """
         |create table table1 (
         |  id int not null auto_increment,
-        |  column1 mediumint not null,
-        |  column2 enum('value1', 'value2') null unique,
+        |  column1 mediumint not null unique,
+        |  column2 enum('value1', 'value2') null,
         |  column3 varchar not null,
         |
         |  foreign key (column3)
@@ -31,10 +31,19 @@ csdfs.generateInsertStatements(
         |create table table2 (
         |  id int not null auto_increment,
         |  column1 char not null,
-        |  column2 varchar not null
+        |  column2 varchar not null,
+        |
+        |  primary key (id, column1)
         |)
       """.stripMargin
-    ))
+    ),
+    GenConf(
+      Map((Table("table1"),
+        GenConf.GenTableConf(Table("table1"), 10,
+          Map((Column("column2"),
+            GenConf.GenColumnConf(Column("column2"), cardinality = 2))))))
+    )
+)
 ```
 
 returns
@@ -42,27 +51,25 @@ returns
 ```scala
 Right(List(
 """INSERT INTO table1 (id, column1, column2, column3) VALUES 
-(-715691413, 3348064, value1, 'WgJx5ebjyFrvciiLJ4vY'),
-(1426974093, 5337510, value2, 'EznCNpPOPEDTYMM6Xssp'),
-(1446523668, 2167930, value1, 'LqiztGacLkFJQT3udmvH'),
-(614036656, 1952271, value1, 'gFlSTBiD6N2ck0AgvHbt'),
-(56317086, 8481338, value1, '6ghQH019L80aXlgUifY6'),
-(-538994130, 5268792, value2, 'GAN53PEffkdfIQ2kjAqY'),
-(-1014239790, 14417965, value1, 'U6f4NWUAU40aKbgCmQI7'),
-(-603291771, 3940782, value1, 'CYF4Eqwe9RCxubwd91oT'),
-(898091868, 4953800, value2, 'WgJx5ebjyFrvciiLJ4vY'),
-(714183211, 14181945, value1, 'bB19NWssz0mnNfj6eH7n'),
-(-719618547, 15652892, value2, 'VDYAJAtOuROSp0vfCa4a');""",
-"""INSERT INTO table2 (id, column1, column2) VALUES 
-(-173270041, 'e', 'Vyz9YHFo6JRwUvIq7Rq1'),
-(-972631142, 'p', 'mVtxeGGaGTTsCOcos58t'),
-(-1772900352, 'f', 'Qu5qMUNKjHxSBK0nYQi9'),
-(-2072802790, '7', 'Vyz9YHFo6JRwUvIq7Rq1'),
-(1924561849, 'V', 'KzkohjtZl0WKJbW8HB2h'),
-(906269495, 'H', '3wNIjq2FfdSrfmlfqHIs'),
-(1777892755, 'S', 'NEOXj68Pgd7i6Xgaq7jG'),
-(-1194832663, 'X', 'yplEw0gcKZP3a7jKzDIf'),
-(-1959988323, 'p', 'AOTdj7ly4DRChEYswgoD'),
-(-664777541, 'p', '5YJCIcG2JHCpabJp8ngh'),
-(333305104, 'E', 'QYSwzlpPnQWH2SFBfBUU');"""))
+(-586993562, 12241194, value1, 'PXnjdffykXeP5zG5HwMh'),
+(-823798655, 8893848, value1, 'D9bLAAJiV8fKRcDOUwvX'),
+(642949237, 6419621, value1, 'hBXEBLVgFtfjM4jfgu69'),
+(535174522, 2873838, value1, '8Bw5rdriOE0U2Ne6dxtm'),
+(457588828, 2323780, value1, 'eKDZsQKwCqrWKPU3FoTh'),
+(-1401895932, 14158572, value1, '6jGeJ1czPQBr4U1AHTdJ'),
+(-1432855235, 6371477, value1, 'BlcO7JDOTOA1ca133W7F'),
+(-1626369446, 15265092, value1, 'WGzOzrvTu2BTaeAIFVgj'),
+(-1028050537, 808524, value2, '3FXGA3QYM3jNKMMcMwsg'),
+(1130449006, 8866004, value1, 'YpalAsknwCQzoGdg9QCK');""",
+"""INSERT INTO table2 (column2, id, column1) VALUES 
+('8Bw5rdriOE0U2Ne6dxtm', 1945521320, 'z'),
+('BlcO7JDOTOA1ca133W7F', 1945521320, 'B'),
+('D9bLAAJiV8fKRcDOUwvX', 1945521320, 'K'),
+('WGzOzrvTu2BTaeAIFVgj', 1945521320, 'a'),
+('eKDZsQKwCqrWKPU3FoTh', 1945521320, '2'),
+('hBXEBLVgFtfjM4jfgu69', 1945521320, 'd'),
+('3FXGA3QYM3jNKMMcMwsg', 1945521320, 'k'),
+('PXnjdffykXeP5zG5HwMh', 1945521320, 'N'),
+('YpalAsknwCQzoGdg9QCK', 1945521320, 'v'),
+('6jGeJ1czPQBr4U1AHTdJ', 1945521320, '1');"""))
 ```

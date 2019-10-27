@@ -17,8 +17,8 @@ class MySQLCsdfsSpec extends Specification {
           """
             |create table table1 (
             |  id int not null auto_increment,
-            |  column1 mediumint not null,
-            |  column2 enum('value1', 'value2') null unique,
+            |  column1 mediumint not null unique,
+            |  column2 enum('value1', 'value2') null,
             |  column3 varchar not null,
             |
             |  foreign key (column3)
@@ -29,9 +29,17 @@ class MySQLCsdfsSpec extends Specification {
             |create table table2 (
             |  id int not null auto_increment,
             |  column1 char not null,
-            |  column2 varchar not null
+            |  column2 varchar not null,
+            |
+            |  primary key (id, column1)
             |)
           """.stripMargin
+        ),
+        GenConf(
+          Map((Table("table1"),
+            GenConf.GenTableConf(Table("table1"), 10,
+              Map((Column("column2"),
+                GenConf.GenColumnConf(Column("column2"), cardinality = 2))))))
         )
       ) must beRight
     }

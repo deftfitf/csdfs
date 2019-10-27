@@ -8,4 +8,8 @@ object CsdfsError {
 
   case class SchemaParseError(override val message: String) extends CsdfsError(message)
 
+  case class UniqueConstraintError(override val message: String) extends CsdfsError(message)
+
+  case class GenerateConfigError(override val message: String) extends CsdfsError(message)
+
 }

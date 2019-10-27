@@ -101,14 +101,14 @@ protected[csdfs] trait MySQLSchemaParser
 
   private def primaryKeyConstraint: Parser[PrimaryKey] =
     ("CONSTRAINT" ~> stringLiteral).? ~> "PRIMARY" ~> "KEY" ~> stringLiteral.? ~> ("(" ~> rep1sep(stringLiteral, ",") <~ ")") ^^ { keys =>
-      PrimaryKey(keys)
+      PrimaryKey(keys.map(Column))
     }
 
   private def uniqueKeyConstraint: Parser[UniqueKey] =
     ("CONSTRAINT" ~> stringLiteral).? ~> "UNIQUE" ~> "KEY" ~>
       ("INDEX" | "KEY").? ~> stringLiteral.? ~> stringLiteral.? ~>
       ("(" ~> rep1sep(stringLiteral, ",") <~ ")") ^^ { keys =>
-      UniqueKey(keys)
+      UniqueKey(keys.map(Column))
     }
 
   private def foreighKeyConstraint: Parser[ForeignKey] =

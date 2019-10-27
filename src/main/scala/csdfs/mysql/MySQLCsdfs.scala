@@ -15,11 +15,11 @@ class MySQLCsdfs(
         case e @ Left(_) => e
       })
 
-  def generateInsertStatements(schemas: Seq[String]): Either[CsdfsError, Seq[String]] = {
+  def generateInsertStatements(schemas: Seq[String], genConf: GenConf): Either[CsdfsError, Seq[String]] = {
     for {
       parsedSchemas <- parseAllSchemas(schemas)
       resolvedDependency <- dependencyResolver.resolveSchemaDependency(parsedSchemas)
-      generatedInsertStatements = resolvedDependency.generateSampleDataInsertStatement()
+      generatedInsertStatements <- resolvedDependency.generateSampleDataInsertStatement(genConf)
     } yield generatedInsertStatements
     
   }

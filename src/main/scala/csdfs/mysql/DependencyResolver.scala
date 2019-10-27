@@ -29,7 +29,6 @@ private[mysql] class DependencyResolver {
     }
 
     topologicalSort(dim, Nil) map { sorted =>
-      println(sorted)
       new SchemaDependency(sorted, schemas.map(s => (s.tbl, s)).toMap)
     }
   }
