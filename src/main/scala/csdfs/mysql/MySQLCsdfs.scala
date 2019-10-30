@@ -26,3 +26,11 @@ class MySQLCsdfs(
 
 }
 
+object MySQLCsdfs {
+
+  final val instance =
+    new MySQLCsdfs(
+      new MySQLSchemaParser {},
+      new DependencyResolver)
+
+}

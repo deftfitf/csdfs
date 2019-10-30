@@ -45,38 +45,45 @@ protected[csdfs] trait MySQLSchemaParser
       varbinary | tinyblob | blob | mediumblob | longblob | tinytext |
       text | mediumtext | longtext | enum | set
 
-  private def bit: Parser[dt.Bit.type] = "BIT" ^^ (_ => dt.Bit)
-  private def tinyint: Parser[dt.Tinyint.type] = "TINYINT" ^^ (_ => dt.Tinyint)
-  private def smallint: Parser[dt.Smallint.type] = "SMALLINT" ^^ (_ => dt.Smallint)
-  private def mediumint: Parser[dt.Mediumint.type] = "MEDIUMINT" ^^ (_ => dt.Mediumint)
-  private def int: Parser[dt.Int.type] = "INT" ^^ (_ => dt.Int)
-  private def integer: Parser[dt.Integer.type] = "INTEGER" ^^ (_ => dt.Integer)
-  private def bigint: Parser[dt.Bigint.type] = "BIGINT" ^^ (_ => dt.Bigint)
-  private def double: Parser[dt.Double.type] = "DOUBLE" ^^ (_ => dt.Double)
-  private def float: Parser[dt.Float.type] = "FLOAT" ^^ (_ => dt.Float)
-  private def decimal: Parser[dt.Decimal.type] = "DECIMAL" ^^ (_ => dt.Decimal)
-  private def numeric: Parser[dt.Numeric.type] = "NUMERIC" ^^ (_ => dt.Numeric)
-  private def date: Parser[dt.Date.type] = "DATE" ^^ (_ => dt.Date)
-  private def time: Parser[dt.Time.type] = "TIME" ^^ (_ => dt.Time)
-  private def timestamp: Parser[dt.Timestamp.type] = "TIMESTAMP" ^^ (_ => dt.Timestamp)
+  private def bit: Parser[dt.Bit] = "BIT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Bit(unsigned))
+  private def tinyint: Parser[dt.Tinyint] = "TINYINT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Tinyint(unsigned))
+  private def smallint: Parser[dt.Smallint] = "SMALLINT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Smallint(unsigned))
+  private def mediumint: Parser[dt.Mediumint] = "MEDIUMINT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Mediumint(unsigned))
+  private def int: Parser[dt.MySQLInt] = "INT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.MySQLInt(unsigned))
+  private def integer: Parser[dt.Integer] = "INTEGER" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Integer(unsigned))
+  private def bigint: Parser[dt.Bigint] = "BIGINT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Bigint(unsigned))
+  private def double: Parser[dt.Double] = "DOUBLE" ~> lengthDecimalOpt ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Double(ld, unsigned) }
+  private def float: Parser[dt.Float] = "FLOAT" ~> lengthDecimalOpt ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Float(ld, unsigned) }
+  private def decimal: Parser[dt.Decimal] = "DECIMAL" ~> maybeLengthMaybeDecimal ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Decimal(ld, unsigned) }
+  private def numeric: Parser[dt.Numeric] = "NUMERIC" ~> maybeLengthMaybeDecimal ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Numeric(ld, unsigned) }
+  private def date: Parser[dt.Date.type] = "DATE" ~> fsp ^^ (_ => dt.Date)
+  private def time: Parser[dt.Time.type] = "TIME" ~> fsp ^^ (_ => dt.Time)
+  private def timestamp: Parser[dt.Timestamp.type] = "TIMESTAMP" ~> fsp ^^ (_ => dt.Timestamp)
   private def datetime: Parser[dt.Datetime.type] = "DATETIME" ^^ (_ => dt.Datetime)
   private def year: Parser[dt.Year.type] = "YEAR" ^^ (_ => dt.Year)
-  private def char: Parser[dt.Char] = "CHAR" ~> charset.? ^^ (charset => dt.Char(charset.flatten))
-  private def varchar: Parser[dt.Varchar] = "VARCHAR" ~> charset.? ^^ (charset => dt.Varchar(charset.flatten))
-  private def binary: Parser[dt.Binary.type] = "BINARY" ^^ (_ => dt.Binary)
-  private def varbinary: Parser[dt.Varbinary.type] = "VARBINARY" ^^ (_ => dt.Varbinary)
+  private def char: Parser[dt.Char] = "CHAR" ~> dataTypeLength ~ charset.? ^^ { case len ~ charset => dt.Char(len, charset.flatten) }
+  private def varchar: Parser[dt.Varchar] = "VARCHAR" ~> dataTypeLength ~ charset.? ^^ { case len ~ charset => dt.Varchar(len, charset.flatten) }
+  private def binary: Parser[dt.Binary] = "BINARY" ~> dataTypeLength ^^ (len => dt.Binary(len))
+  private def varbinary: Parser[dt.Varbinary] = "VARBINARY" ~> dataTypeLength ^^ (len => dt.Varbinary(len))
   private def tinyblob: Parser[dt.Tinyblob.type] = "TINYBLOB" ^^ (_ => dt.Tinyblob)
   private def blob: Parser[dt.Blob.type] = "BLOB" ^^ (_ => dt.Blob)
   private def mediumblob: Parser[dt.Mediumblob.type] = "MEDIUMBLOB" ^^ (_ => dt.Mediumblob)
   private def longblob : Parser[dt.Longblob.type] = "LONGBLOB " ^^ (_ => dt.Longblob)
-  private def tinytext: Parser[dt.Tinytext] = "TINYTEXT" ~> charset.? ^^ (charset => dt.Tinytext(charset.flatten))
-  private def text: Parser[dt.Text] = "TEXT" ~> charset.? ^^ (charset => dt.Text(charset.flatten))
-  private def mediumtext: Parser[dt.Mediumtext] = "MEDIUMTEXT" ~> charset.? ^^ (charset => dt.Mediumtext(charset.flatten))
-  private def longtext: Parser[dt.Longtext] = "LONGTEXT" ~> charset.? ^^ (charset => dt.Longtext(charset.flatten))
+  private def tinytext: Parser[dt.Tinytext] = "TINYTEXT" ~> binaryFlag ~> charset.? ^^ (charset => dt.Tinytext(charset.flatten))
+  private def text: Parser[dt.Text] = "TEXT" ~> binaryFlag ~> charset.? ^^ (charset => dt.Text(charset.flatten))
+  private def mediumtext: Parser[dt.Mediumtext] = "MEDIUMTEXT" ~> binaryFlag ~> charset.? ^^ (charset => dt.Mediumtext(charset.flatten))
+  private def longtext: Parser[dt.Longtext] = "LONGTEXT" ~> binaryFlag ~> charset.? ^^ (charset => dt.Longtext(charset.flatten))
   private def enum: Parser[dt.MEnum] = "ENUM" ~> ("(" ~> rep1sep(mySqlString, ",") <~ ")") ~ charset.? ^^
     { case values ~ charset => dt.MEnum(values.toSet, charset.flatten) }
   private def set: Parser[dt.MSet] = "SET" ~> ("(" ~> rep1sep(mySqlString, ",") <~ ")") ~ charset.? ^^
     { case values ~ charset => dt.MSet(values.toSet, charset.flatten) }
+  private def dataTypeLength: Parser[Option[Int]] = ("(" ~> wholeNumber <~ ")").? ^^ (maybeLength => maybeLength.map(_.toInt))
+  private def fsp: Parser[Option[Int]] = ("(" ~> wholeNumber <~ ")").? ^^ (maybeFsp => maybeFsp.map(_.toInt))
+  private def unsigned: Parser[Boolean] = "UNSIGNED".? ^^ (unsigned => unsigned.fold(false)(_ => true))
+  private def zeroFill: Parser[Boolean] = "ZEROFILL".? ^^ (zeroFill => zeroFill.fold(false)(_ => true))
+  private def lengthDecimalOpt: Parser[Option[(Int, Int)]] = ("(" ~> wholeNumber ~ ("," ~> wholeNumber) <~ ")").? ^^ { _.map(n => (n._1.toInt, n._2.toInt)) }
+  private def maybeLengthMaybeDecimal: Parser[Option[(Int, Option[Int])]] = ("(" ~> wholeNumber ~ ("," ~> wholeNumber).? <~ ")").? ^^ (r => r.map(rr => (rr._1.toInt, rr._2.map(_.toInt))))
+  private def binaryFlag: Parser[Boolean] = "BINARY".? ^^ (zeroFill => zeroFill.fold(false)(_ => true))
 
   private def quoto: Parser[String] = "'" | "\""
 

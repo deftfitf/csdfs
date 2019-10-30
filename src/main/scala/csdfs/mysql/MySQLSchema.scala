@@ -4,8 +4,6 @@ import csdfs.mysql.CsdfsError.{GenerateConfigError, UniqueConstraintError}
 import csdfs.mysql.MySQLSchema.{ColumnDef, CreateDefinition, ForeignKey, PrimaryKey, UniqueGroupConstraint, UniqueKey}
 import csdfs.mysql.MySQLDataType._
 
-import scala.util.Random
-
 // TODO: オートインクリメントの考慮, ユニーク制約の考慮, 実装リファクタ
 case class MySQLSchema(tbl: Table, createDefinitions: Seq[CreateDefinition]) {
 

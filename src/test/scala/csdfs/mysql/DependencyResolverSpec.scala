@@ -14,13 +14,13 @@ class DependencyResolverSpec extends Specification {
         MySQLSchema(
           Table("independent"),
           Seq(
-            ColumnDef(Column("col1"), MySQLDataType.Int, true, false, false),
+            ColumnDef(Column("col1"), MySQLDataType.MySQLInt(true), true, false, false),
             ForeignKey(Table("dependent"), Map((Column("col1"), Column("col1"))))))
       val dependent =
         MySQLSchema(
           Table("dependent"),
           Seq(
-            ColumnDef(Column("col1"), MySQLDataType.Int, true, false, false)))
+            ColumnDef(Column("col1"), MySQLDataType.MySQLInt(true), true, false, false)))
       val schemas =
         Seq(independent, dependent)
 
@@ -33,7 +33,7 @@ class DependencyResolverSpec extends Specification {
         MySQLSchema(
           Table("cyclic"),
           Seq(
-            ColumnDef(Column("col1"), MySQLDataType.Int, true, false, false),
+            ColumnDef(Column("col1"), MySQLDataType.MySQLInt(true), true, false, false),
             ForeignKey(Table("cyclic"), Map((Column("col1"), Column("col1"))))))
 
       resolver.resolveSchemaDependency(Seq(cyclic)) must beLeft
