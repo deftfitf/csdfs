@@ -25,7 +25,7 @@ protected[csdfs] trait MySQLSchemaParser
     }
 
   private def createDefinition: Parser[CreateDefinition] =
-    columnDefinition | primaryKeyConstraint | uniqueKeyConstraint | foreighKeyConstraint
+    columnDefinition | primaryKeyConstraint | indexDefinition | uniqueKeyConstraint | foreighKeyConstraint
 
   private def columnDefinition: Parser[ColumnDef] =
     stringLiteral ~ dataType ~ notNullConstraint ~ autoIncrement ~ uniqueConstraint ^^
@@ -39,32 +39,32 @@ protected[csdfs] trait MySQLSchemaParser
     }
 
   private def dataType: Parser[MySQLDataType] =
-    bit | tinyint | smallint | mediumint | int | integer |
+    bit | tinyint | smallint | mediumint | integer | int |
       bigint | double | float | decimal | numeric | date |
       time | timestamp | datetime | year | char | varchar | binary |
       varbinary | tinyblob | blob | mediumblob | longblob | tinytext |
       text | mediumtext | longtext | enum | set
 
-  private def bit: Parser[dt.Bit] = "BIT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Bit(unsigned))
-  private def tinyint: Parser[dt.Tinyint] = "TINYINT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Tinyint(unsigned))
-  private def smallint: Parser[dt.Smallint] = "SMALLINT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Smallint(unsigned))
-  private def mediumint: Parser[dt.Mediumint] = "MEDIUMINT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Mediumint(unsigned))
-  private def int: Parser[dt.MySQLInt] = "INT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.MySQLInt(unsigned))
-  private def integer: Parser[dt.Integer] = "INTEGER" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Integer(unsigned))
-  private def bigint: Parser[dt.Bigint] = "BIGINT" ~> dataTypeLength ~> unsigned <~ zeroFill ^^ (unsigned => dt.Bigint(unsigned))
-  private def double: Parser[dt.Double] = "DOUBLE" ~> lengthDecimalOpt ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Double(ld, unsigned) }
-  private def float: Parser[dt.Float] = "FLOAT" ~> lengthDecimalOpt ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Float(ld, unsigned) }
-  private def decimal: Parser[dt.Decimal] = "DECIMAL" ~> maybeLengthMaybeDecimal ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Decimal(ld, unsigned) }
-  private def numeric: Parser[dt.Numeric] = "NUMERIC" ~> maybeLengthMaybeDecimal ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Numeric(ld, unsigned) }
-  private def date: Parser[dt.Date.type] = "DATE" ~> fsp ^^ (_ => dt.Date)
-  private def time: Parser[dt.Time.type] = "TIME" ~> fsp ^^ (_ => dt.Time)
-  private def timestamp: Parser[dt.Timestamp.type] = "TIMESTAMP" ~> fsp ^^ (_ => dt.Timestamp)
+  private def bit: Parser[dt.Bit] = "BIT" ~> dataTypeLength.? ~> unsigned <~ zeroFill ^^ (unsigned => dt.Bit(unsigned))
+  private def tinyint: Parser[dt.Tinyint] = "TINYINT" ~> dataTypeLength.? ~> unsigned <~ zeroFill ^^ (unsigned => dt.Tinyint(unsigned))
+  private def smallint: Parser[dt.Smallint] = "SMALLINT" ~> dataTypeLength.? ~> unsigned <~ zeroFill ^^ (unsigned => dt.Smallint(unsigned))
+  private def mediumint: Parser[dt.Mediumint] = "MEDIUMINT" ~> dataTypeLength.? ~> unsigned <~ zeroFill ^^ (unsigned => dt.Mediumint(unsigned))
+  private def int: Parser[dt.MySQLInt] = "INT" ~> dataTypeLength.? ~> unsigned <~ zeroFill ^^ (unsigned => dt.MySQLInt(unsigned))
+  private def integer: Parser[dt.Integer] = "INTEGER" ~> dataTypeLength.? ~> unsigned <~ zeroFill ^^ (unsigned => dt.Integer(unsigned))
+  private def bigint: Parser[dt.Bigint] = "BIGINT" ~> dataTypeLength.? ~> unsigned <~ zeroFill ^^ (unsigned => dt.Bigint(unsigned))
+  private def double: Parser[dt.Double] = "DOUBLE" ~> lengthDecimal.? ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Double(ld, unsigned) }
+  private def float: Parser[dt.Float] = "FLOAT" ~> lengthDecimal.? ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Float(ld, unsigned) }
+  private def decimal: Parser[dt.Decimal] = "DECIMAL" ~> lengthMaybeDecimal.? ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Decimal(ld, unsigned) }
+  private def numeric: Parser[dt.Numeric] = "NUMERIC" ~> lengthMaybeDecimal.? ~ unsigned <~ zeroFill ^^ { case ld ~ unsigned => dt.Numeric(ld, unsigned) }
+  private def date: Parser[dt.Date.type] = "DATE" ~> fsp.? ^^ (_ => dt.Date)
+  private def time: Parser[dt.Time.type] = "TIME" ~> fsp.? ^^ (_ => dt.Time)
+  private def timestamp: Parser[dt.Timestamp.type] = "TIMESTAMP" ~> fsp.? ^^ (_ => dt.Timestamp)
   private def datetime: Parser[dt.Datetime.type] = "DATETIME" ^^ (_ => dt.Datetime)
   private def year: Parser[dt.Year.type] = "YEAR" ^^ (_ => dt.Year)
-  private def char: Parser[dt.Char] = "CHAR" ~> dataTypeLength ~ charset.? ^^ { case len ~ charset => dt.Char(len, charset.flatten) }
-  private def varchar: Parser[dt.Varchar] = "VARCHAR" ~> dataTypeLength ~ charset.? ^^ { case len ~ charset => dt.Varchar(len, charset.flatten) }
-  private def binary: Parser[dt.Binary] = "BINARY" ~> dataTypeLength ^^ (len => dt.Binary(len))
-  private def varbinary: Parser[dt.Varbinary] = "VARBINARY" ~> dataTypeLength ^^ (len => dt.Varbinary(len))
+  private def char: Parser[dt.Char] = "CHAR" ~> dataTypeLength.? ~ charset.? ^^ { case len ~ charset => dt.Char(len, charset.flatten) }
+  private def varchar: Parser[dt.Varchar] = "VARCHAR" ~> dataTypeLength.? ~ charset.? ^^ { case len ~ charset => dt.Varchar(len, charset.flatten) }
+  private def binary: Parser[dt.Binary] = "BINARY" ~> dataTypeLength.? ^^ (len => dt.Binary(len))
+  private def varbinary: Parser[dt.Varbinary] = "VARBINARY" ~> dataTypeLength.? ^^ (len => dt.Varbinary(len))
   private def tinyblob: Parser[dt.Tinyblob.type] = "TINYBLOB" ^^ (_ => dt.Tinyblob)
   private def blob: Parser[dt.Blob.type] = "BLOB" ^^ (_ => dt.Blob)
   private def mediumblob: Parser[dt.Mediumblob.type] = "MEDIUMBLOB" ^^ (_ => dt.Mediumblob)
@@ -77,12 +77,12 @@ protected[csdfs] trait MySQLSchemaParser
     { case values ~ charset => dt.MEnum(values.toSet, charset.flatten) }
   private def set: Parser[dt.MSet] = "SET" ~> ("(" ~> rep1sep(mySqlString, ",") <~ ")") ~ charset.? ^^
     { case values ~ charset => dt.MSet(values.toSet, charset.flatten) }
-  private def dataTypeLength: Parser[Option[Int]] = ("(" ~> wholeNumber <~ ")").? ^^ (maybeLength => maybeLength.map(_.toInt))
-  private def fsp: Parser[Option[Int]] = ("(" ~> wholeNumber <~ ")").? ^^ (maybeFsp => maybeFsp.map(_.toInt))
+  private def dataTypeLength: Parser[Int] = "(" ~> wholeNumber <~ ")" ^^ (_.toInt)
+  private def fsp: Parser[Int] = "(" ~> wholeNumber <~ ")" ^^ (_.toInt)
   private def unsigned: Parser[Boolean] = "UNSIGNED".? ^^ (unsigned => unsigned.fold(false)(_ => true))
   private def zeroFill: Parser[Boolean] = "ZEROFILL".? ^^ (zeroFill => zeroFill.fold(false)(_ => true))
-  private def lengthDecimalOpt: Parser[Option[(Int, Int)]] = ("(" ~> wholeNumber ~ ("," ~> wholeNumber) <~ ")").? ^^ { _.map(n => (n._1.toInt, n._2.toInt)) }
-  private def maybeLengthMaybeDecimal: Parser[Option[(Int, Option[Int])]] = ("(" ~> wholeNumber ~ ("," ~> wholeNumber).? <~ ")").? ^^ (r => r.map(rr => (rr._1.toInt, rr._2.map(_.toInt))))
+  private def lengthDecimal: Parser[(Int, Int)] = "(" ~> wholeNumber ~ ("," ~> wholeNumber) <~ ")" ^^ (n => (n._1.toInt, n._2.toInt))
+  private def lengthMaybeDecimal: Parser[(Int, Option[Int])] = "(" ~> wholeNumber ~ ("," ~> wholeNumber).? <~ ")" ^^ (rr => (rr._1.toInt, rr._2.map(_.toInt)))
   private def binaryFlag: Parser[Boolean] = "BINARY".? ^^ (zeroFill => zeroFill.fold(false)(_ => true))
 
   private def quoto: Parser[String] = "'" | "\""
@@ -107,19 +107,21 @@ protected[csdfs] trait MySQLSchemaParser
     "UNIQUE".? ^^ ifSomeTrueElseFalse
 
   private def primaryKeyConstraint: Parser[PrimaryKey] =
-    ("CONSTRAINT" ~> stringLiteral).? ~> "PRIMARY" ~> "KEY" ~> stringLiteral.? ~> ("(" ~> rep1sep(stringLiteral, ",") <~ ")") ^^ { keys =>
+    ("CONSTRAINT" ~> stringLiteral.?).? ~> "PRIMARY" ~> "KEY" ~> indexType.? ~> "(" ~> rep1sep(stringLiteral, ",") <~ ")" ^^ { keys =>
       PrimaryKey(keys.map(Column))
     }
 
+  private def indexDefinition: Parser[CreateDefinition] = ("INDEX" | "KEY") ~> stringLiteral.? ~> indexType.? ~> "(" ~> rep1sep(stringLiteral, ",") ~> ")" ^^ (_ => Index)
+
   private def uniqueKeyConstraint: Parser[UniqueKey] =
-    ("CONSTRAINT" ~> stringLiteral).? ~> "UNIQUE" ~> "KEY" ~>
-      ("INDEX" | "KEY").? ~> stringLiteral.? ~> stringLiteral.? ~>
-      ("(" ~> rep1sep(stringLiteral, ",") <~ ")") ^^ { keys =>
+    ("CONSTRAINT" ~> stringLiteral.?).? ~> "UNIQUE" ~> "KEY" ~>
+      ("INDEX" | "KEY").? ~> stringLiteral.? ~> indexType.? ~>
+      "(" ~> rep1sep(stringLiteral, ",") <~ ")" ^^ { keys =>
       UniqueKey(keys.map(Column))
     }
 
   private def foreighKeyConstraint: Parser[ForeignKey] =
-    ("CONSTRAINT" ~> stringLiteral).? ~> "FOREIGN" ~> "KEY" ~> stringLiteral.? ~>
+    ("CONSTRAINT" ~> stringLiteral.?).? ~> "FOREIGN" ~> "KEY" ~> stringLiteral.? ~>
       ("(" ~> rep1sep(stringLiteral, ",") <~ ")") ~ ("REFERENCES" ~> stringLiteral ~
         ("(" ~> rep1sep(stringLiteral, ",") <~ ")") <~
       (("ON" ~> "DELETE" ~> stringLiteral).? ~ ("ON" ~> "UPDATE" ~> stringLiteral).?)) ^^ {
@@ -129,6 +131,8 @@ protected[csdfs] trait MySQLSchemaParser
           thisTblKeys.map(Column)
             .zip(refTblKeys.map(Column)).toMap)
     }
+
+  private def indexType: Parser[String] = "USING" ~> ("BTREE" | "HASH")
 
   private val ifSomeTrueElseFalse: Option[_] => Boolean = _.fold(false)(_ => true)
 

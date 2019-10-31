@@ -160,6 +160,8 @@ object MySQLSchema {
 
   sealed trait CreateDefinition
 
+  case object Index extends CreateDefinition
+
   case class ColumnDef(
                         column: Column,
                         dataType: MySQLDataType,
